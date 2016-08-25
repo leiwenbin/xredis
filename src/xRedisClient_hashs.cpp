@@ -52,7 +52,7 @@ bool xRedisClient::hincrbyfloat(const RedisDBIdx& dbi, const string& key, const 
 
     redisReply* reply = static_cast<redisReply*>(redisCommand(pRedisConn->getCtx(), "HINCRBYFLOAT %s %s %f", key.c_str(), field.c_str(), increment));
     if (RedisPool::CheckReply(reply)) {
-        value = atof(reply->str);
+        value = (float) atof(reply->str);
         bRet = true;
     }
 

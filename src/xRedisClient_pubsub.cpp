@@ -62,12 +62,10 @@ bool xRedisClient::punsubscribe(const RedisDBIdx& dbi, const KEYS& patterns, xRe
     }
 
     redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
-    if (RedisPool::CheckReply(reply)) {
+    if (RedisPool::CheckReply(reply))
         bRet = true;
-    }
-    else {
+    else
         SetErrInfo(dbi, reply);
-    }
     RedisPool::FreeReply(reply);
     return bRet;
 }
@@ -101,11 +99,10 @@ bool xRedisClient::unsubscribe(const RedisDBIdx& dbi, const KEYS& channels, xRed
     }
 
     redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
-    if (RedisPool::CheckReply(reply)) {
+    if (RedisPool::CheckReply(reply))
         bRet = true;
-    } else {
+    else
         SetErrInfo(dbi, reply);
-    }
     RedisPool::FreeReply(reply);
     return bRet;
 }

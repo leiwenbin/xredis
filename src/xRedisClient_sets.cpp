@@ -18,16 +18,14 @@ bool xRedisClient::sadd(const RedisDBIdx& dbi, const string& key, const VALUES& 
 }
 
 bool xRedisClient::scard(const RedisDBIdx& dbi, const string& key, int64_t& count) {
-    if (0 == key.length())
-        return false;
+    if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(SLAVE);
     return command_integer(dbi, count, "SCARD %s", key.c_str());
 }
 
 bool xRedisClient::sdiff(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue) {
     size_t size = vkey.size();
-    if (0 == size)
-        return false;
+    if (0 == size) return false;
     VALUES* setData = new VALUES[size];
     VALUES::iterator endpos;
 
@@ -79,7 +77,7 @@ bool xRedisClient::sinter(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue
     size_t n = 0;
     while (n++ < size - 1) {
         endpos = set_intersection(setData[n].begin(), setData[n].end(), setData[n + 1].begin(), setData[n + 1].end(), sValue.begin());
-        sValue.resize(endpos - sValue.begin());
+        sValue.resize((unsigned long) (endpos - sValue.begin()));
     }
     delete[] setData;
 
@@ -88,41 +86,35 @@ bool xRedisClient::sinter(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue
 
 bool xRedisClient::sinterstore(const RedisDBIdx& des_dbi, const KEY& destinationkey, const DBIArray& vdbi, const KEYS& vkey, int64_t& count) {
     VALUES sValue;
-    if (!sinter(vdbi, vkey, sValue))
-        return false;
+    if (!sinter(vdbi, vkey, sValue)) return false;
     return sadd(des_dbi, destinationkey, sValue, count);
 }
 
 bool xRedisClient::sismember(const RedisDBIdx& dbi, const KEY& key, const VALUE& member) {
-    if (0 == key.length())
-        return false;
+    if (0 == key.length()) return false;
     return command_bool(dbi, "SISMEMBER %s %s", key.c_str(), member.c_str());
 }
 
 bool xRedisClient::smembers(const RedisDBIdx& dbi, const KEY& key, VALUES& vValue) {
-    if (0 == key.length())
-        return false;
+    if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(SLAVE);
     return command_list(dbi, vValue, "SMEMBERS %s", key.c_str());
 }
 
 bool xRedisClient::smove(const RedisDBIdx& dbi, const KEY& srckey, const KEY& deskey, const VALUE& member) {
-    if (0 == srckey.length())
-        return false;
+    if (0 == srckey.length()) return false;
     SETDEFAULTIOTYPE(MASTER);
     return command_bool(dbi, "SMOVE %s", srckey.c_str(), deskey.c_str(), member.c_str());
 }
 
 bool xRedisClient::spop(const RedisDBIdx& dbi, const KEY& key, VALUE& member) {
-    if (0 == key.length())
-        return false;
+    if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(MASTER);
     return command_string(dbi, member, "SPOP %s", key.c_str());
 }
 
 bool xRedisClient::srandmember(const RedisDBIdx& dbi, const KEY& key, VALUES& members, int count) {
-    if (0 == key.length())
-        return false;
+    if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(SLAVE);
     if (0 == count)
         return command_list(dbi, members, "SRANDMEMBER %s", key.c_str());
@@ -130,8 +122,7 @@ bool xRedisClient::srandmember(const RedisDBIdx& dbi, const KEY& key, VALUES& me
 }
 
 bool xRedisClient::srem(const RedisDBIdx& dbi, const KEY& key, const VALUES& vmembers, int64_t& count) {
-    if (0 == key.length())
-        return false;
+    if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(MASTER);
     VDATA vCmdData;
     vCmdData.push_back("SREM");
@@ -169,8 +160,7 @@ bool xRedisClient::sunion(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue
 bool xRedisClient::sunionstore(const RedisDBIdx& dbi, const KEY& deskey, const DBIArray& vdbi, const KEYS& vkey, int64_t& count) {
     VALUES sValue;
     if (!dbi.mIOFlag) { SetIOtype(dbi, MASTER, true); }
-    if (!sunion(vdbi, vkey, sValue))
-        return false;
+    if (!sunion(vdbi, vkey, sValue)) return false;
     return sadd(dbi, deskey, sValue, count);
 }
 

@@ -34,11 +34,10 @@ bool xRedisClient::set(const RedisDBIdx& dbi, const string& key, const string& v
 
 bool xRedisClient::set(const RedisDBIdx& dbi, const string& key, const char* value, int len, int second) {
     SETDEFAULTIOTYPE(MASTER);
-    if (0 == second) {
+    if (0 == second)
         return command_bool(dbi, "set %s %b", key.c_str(), value, len);
-    } else {
+    else
         return command_bool(dbi, "set %s %b EX %d", key.c_str(), value, len, second);
-    }
 }
 
 bool xRedisClient::setbit(const RedisDBIdx& dbi, const string& key, int offset, int64_t newbitValue, int64_t oldbitValue) {
@@ -118,7 +117,7 @@ bool xRedisClient::setex(const RedisDBIdx& dbi, const string& key, int seconds, 
     vCmdData.push_back(toString(seconds));
     vCmdData.push_back(value);
     SETDEFAULTIOTYPE(MASTER);
-    return commandargv_bool(dbi, vCmdData);
+    return commandargv_status(dbi, vCmdData);
 }
 
 bool xRedisClient::setnx(const RedisDBIdx& dbi, const string& key, const string& value) {
