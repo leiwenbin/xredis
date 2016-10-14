@@ -8,7 +8,7 @@ ELSEIF(UNIX)
     SET(CMAKE_CXX_COMPILER "/opt/rh/devtoolset-2/root/usr/bin/c++")
 ENDIF()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -fPIC -Wall -D_REENTRANT -DUSE_APACHE -DNO_STRING_CIPHER ")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -std=c++11 -fPIC -Wall -D_REENTRANT -DUSE_APACHE -DNO_STRING_CIPHER ")
 SET(TARGET "xredis")
 SET(LIBRARY_OUTPUT_PATH ../lib/release_linux/libRedis)
 
@@ -21,4 +21,4 @@ INCLUDE_DIRECTORIES(../include)
 
 ADD_LIBRARY(${TARGET} STATIC ${SOURCE_DIRS_SRC})
 
-TARGET_LINK_LIBRARIES(${TARGET} -lhiredis -std=c++11 -lnsl -lc -lm -lpthread -lstdc++)
+TARGET_LINK_LIBRARIES(${TARGET} -lhiredis -lnsl -lc -lm -lpthread -lstdc++)
