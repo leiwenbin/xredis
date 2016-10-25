@@ -2,13 +2,20 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(xredis)
 
-IF(APPLE)
-ELSEIF(UNIX)
-    SET(CMAKE_C_COMPILER "/opt/rh/devtoolset-2/root/usr/bin/gcc")
-    SET(CMAKE_CXX_COMPILER "/opt/rh/devtoolset-2/root/usr/bin/c++")
+option(C++11_ENABLE "C++11_ENABLE" OFF)
+
+IF(C++11_ENABLE)
+    IF(APPLE)
+    ELSEIF(UNIX)
+        SET(CMAKE_C_COMPILER "/opt/rh/devtoolset-2/root/usr/bin/gcc")
+        SET(CMAKE_CXX_COMPILER "/opt/rh/devtoolset-2/root/usr/bin/c++")
+    ENDIF()
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 ENDIF()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -std=c++11 -fPIC -Wall -D_REENTRANT -DUSE_APACHE -DNO_STRING_CIPHER ")
+MESSAGE("CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -fPIC -Wall -D_REENTRANT -DUSE_APACHE -DNO_STRING_CIPHER ")
 SET(TARGET "xredis")
 SET(LIBRARY_OUTPUT_PATH ../lib/release_linux/libRedis)
 
