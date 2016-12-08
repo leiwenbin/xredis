@@ -359,6 +359,8 @@ int xRedisClient::GetReply(xRedisContext* ctx, ReplyData& vData) {
         }
     }
 
+    RedisPool::FreeReply(reply);
+
     return ret;
 }
 

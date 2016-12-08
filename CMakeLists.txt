@@ -4,6 +4,9 @@ PROJECT(xredis)
 
 option(C++11_ENABLE "C++11_ENABLE" OFF)
 
+SET(CMAKE_C_COMPILER "/usr/bin/gcc")
+SET(CMAKE_CXX_COMPILER "/usr/bin/c++")
+
 IF(C++11_ENABLE)
     IF(APPLE)
     ELSEIF(UNIX)
@@ -11,7 +14,14 @@ IF(C++11_ENABLE)
         SET(CMAKE_CXX_COMPILER "/opt/rh/devtoolset-2/root/usr/bin/c++")
     ENDIF()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
+ELSE()
+    IF(APPLE)
+    ELSEIF(UNIX)
+        SET(CMAKE_C_COMPILER "/usr/bin/gcc")
+        SET(CMAKE_CXX_COMPILER "/usr/bin/c++")
+    ENDIF()
 ENDIF()
+
 
 MESSAGE("CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 
