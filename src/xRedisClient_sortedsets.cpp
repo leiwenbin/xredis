@@ -79,4 +79,6 @@ bool xRedisClient::zscore(const RedisDBIdx& dbi, const string& key, const string
     return command_string(dbi, score, "ZSCORE %s %s", key.c_str(), member.c_str());
 }
 
-
+bool xRedisClient::zscan(const RedisDBIdx& dbi, const std::string& key, int64_t& cursor, const char* pattern, uint32_t count, ArrayReply& array, xRedisContext& ctx) {
+    return ScanFun("ZSCAN", dbi, &key, cursor, pattern, count, array, ctx);
+}

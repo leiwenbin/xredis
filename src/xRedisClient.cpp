@@ -50,10 +50,10 @@ void RedisDBIdx::SetIOMaster() {
     mIOFlag = true;
 }
 
-bool RedisDBIdx::SetErrInfo(const char* info, int len) {
+bool RedisDBIdx::SetErrInfo(const char* info, size_t len) {
     mStrerr.clear();
     if (NULL == info) return false;
-    mStrerr.assign(info, (size_t) len);
+    mStrerr.assign(info, len);
     return true;
 }
 
@@ -92,10 +92,6 @@ inline RedisPool* xRedisClient::GetRedisPool() {
     return mRedisPool;
 }
 
-void xRedisClient::FreeReply(const rReply* reply) {
-    RedisPool::FreeReply((redisReply*) reply);
-}
-
 bool xRedisClient::ConnectRedisCache(const RedisNode* redisnodelist, unsigned int hashbase, unsigned int cachetype) {
     if (NULL == mRedisPool) return false;
 
@@ -112,16 +108,22 @@ bool xRedisClient::ConnectRedisCache(const RedisNode* redisnodelist, unsigned in
     return true;
 }
 
+void xRedisClient::addparam(VDATA& vDes, const VDATA& vSrc) {
+    for (VDATA::const_iterator iter = vSrc.begin(); iter != vSrc.end(); ++iter) {
+        vDes.push_back(*iter);
+    }
+}
+
 void xRedisClient::SetErrInfo(const RedisDBIdx& dbi, void* p) {
     if (NULL == p) {
         SetErrString(dbi, CONNECT_CLOSED_ERROR, ::strlen(CONNECT_CLOSED_ERROR));
     } else {
         redisReply* reply = (redisReply*) p;
-        SetErrString(dbi, reply->str, reply->len);
+        SetErrString(dbi, reply->str, static_cast<int>(reply->len));
     }
 }
 
-void xRedisClient::SetErrString(const RedisDBIdx& dbi, const char* str, int len) {
+void xRedisClient::SetErrString(const RedisDBIdx& dbi, const char* str, size_t len) {
     RedisDBIdx& dbindex = const_cast<RedisDBIdx&>(dbi);
     dbindex.SetErrInfo(str, len);
 }
@@ -333,7 +335,7 @@ bool xRedisClient::commandargv_array_ex(const RedisDBIdx& dbi, const VDATA& vDat
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply))
         bRet = true;
     else
@@ -364,6 +366,15 @@ int xRedisClient::GetReply(xRedisContext* ctx, ReplyData& vData) {
     return ret;
 }
 
+bool xRedisClient::GetxRedisContext(const RedisDBIdx& dbi, xRedisContext* ctx) {
+    RedisConn* pRedisConn = mRedisPool->GetConnection(dbi.mType, dbi.mIndex, dbi.mIOtype);
+    if (NULL == pRedisConn) {
+        return false;
+    }
+    ctx->conn = pRedisConn;
+    return true;
+}
+
 void xRedisClient::FreexRedisContext(xRedisContext* ctx) {
     RedisConn* pRedisConn = static_cast<RedisConn*>(ctx->conn);
     redisReply* reply = static_cast<redisReply*>(redisCommand(pRedisConn->getCtx(), "unsubscribe"));
@@ -386,7 +397,7 @@ bool xRedisClient::commandargv_bool(const RedisDBIdx& dbi, const VDATA& vData) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply))
         bRet = reply->integer == 1;
     else
@@ -413,7 +424,7 @@ bool xRedisClient::commandargv_status(const RedisDBIdx& dbi, const VDATA& vData)
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         // Assume good reply until further inspection
         bRet = true;
@@ -447,7 +458,7 @@ bool xRedisClient::commandargv_array(const RedisDBIdx& dbi, const VDATA& vDataIn
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         for (size_t i = 0; i < reply->elements; i++) {
             DataItem item;
@@ -480,7 +491,7 @@ bool xRedisClient::commandargv_array(const RedisDBIdx& dbi, const VDATA& vDataIn
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         for (size_t i = 0; i < reply->elements; i++) {
             string str(reply->element[i]->str, reply->element[i]->len);
@@ -511,7 +522,7 @@ bool xRedisClient::commandargv_integer(const RedisDBIdx& dbi, const VDATA& vData
         argv[j] = iter->c_str(), argvlen[j] = iter->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), argv.size(), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         retval = reply->integer;
         bRet = true;
@@ -524,9 +535,59 @@ bool xRedisClient::commandargv_integer(const RedisDBIdx& dbi, const VDATA& vData
     return bRet;
 }
 
+bool xRedisClient::ScanFun(const char* cmd, const RedisDBIdx& dbi, const std::string* key,
+                           int64_t& cursor, const char* pattern, uint32_t count, ArrayReply& array, xRedisContext& ctx) {
+    SETDEFAULTIOTYPE(MASTER);
+    VDATA vCmdData;
+    vCmdData.push_back(cmd);
+    if (NULL != key) {
+        vCmdData.push_back(*key);
+    }
 
+    vCmdData.push_back(toString(cursor));
 
+    if (NULL != pattern) {
+        vCmdData.push_back("MATCH");
+        vCmdData.push_back(pattern);
+    }
 
+    if (0 != count) {
+        vCmdData.push_back("COUNT");
+        vCmdData.push_back(toString(count));
+    }
 
+    bool bRet = false;
+    RedisConn* pRedisConn = static_cast<RedisConn*>(ctx.conn);
+    if (NULL == pRedisConn) {
+        SetErrString(dbi, GET_CONNECT_ERROR, ::strlen(GET_CONNECT_ERROR));
+        return false;
+    }
 
+    vector<const char*> argv(vCmdData.size());
+    vector<size_t> argvlen(vCmdData.size());
+    unsigned int j = 0;
+    for (VDATA::const_iterator i = vCmdData.begin(); i != vCmdData.end(); ++i, ++j) {
+        argv[j] = i->c_str(), argvlen[j] = i->size();
+    }
 
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    if (RedisPool::CheckReply(reply)) {
+        if (0 == reply->elements) {
+            cursor = 0;
+        } else {
+            cursor = atoi(reply->element[0]->str);
+            redisReply** replyData = reply->element[1]->element;
+            for (size_t i = 0; i < reply->element[1]->elements; i++) {
+                DataItem item;
+                item.type = replyData[i]->type;
+                item.str.assign(replyData[i]->str, replyData[i]->len);
+                array.push_back(item);
+            }
+        }
+        bRet = true;
+    } else {
+        SetErrInfo(dbi, reply);
+    }
+    RedisPool::FreeReply(reply);
+    return bRet;
+}

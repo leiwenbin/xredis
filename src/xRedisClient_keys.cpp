@@ -138,3 +138,7 @@ bool xRedisClient::keys(const RedisDBIdx& dbi, const string& key, KEYS& keys) {
     SETDEFAULTIOTYPE(MASTER);
     return command_list(dbi, keys, "KEYS %s", key.c_str());
 }
+
+bool xRedisClient::scan(const RedisDBIdx& dbi, int64_t& cursor, const char* pattern, uint32_t count, ArrayReply& array, xRedisContext& ctx) {
+    return ScanFun("SCAN", dbi, NULL, cursor, pattern, count, array, ctx);
+}

@@ -44,7 +44,7 @@ bool xRedisClient::sdiff(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue)
     size_t n = 0;
     while (n++ < size - 1) {
         endpos = set_difference(setData[n].begin(), setData[n].end(), setData[n + 1].begin(), setData[n + 1].end(), sValue.begin());
-        sValue.resize(endpos - sValue.begin());
+        sValue.resize(static_cast<unsigned long>(endpos - sValue.begin()));
     }
     delete[] setData;
     return true;
@@ -151,7 +151,7 @@ bool xRedisClient::sunion(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue
     size_t n = 0;
     while (n++ < size - 1) {
         endpos = set_union(setData[n].begin(), setData[n].end(), setData[n + 1].begin(), setData[n + 1].end(), sValue.begin());
-        sValue.resize(endpos - sValue.begin());
+        sValue.resize(static_cast<unsigned long>(endpos - sValue.begin()));
     }
     delete[] setData;
     return true;
@@ -164,4 +164,6 @@ bool xRedisClient::sunionstore(const RedisDBIdx& dbi, const KEY& deskey, const D
     return sadd(dbi, deskey, sValue, count);
 }
 
-
+bool xRedisClient::sscan(const RedisDBIdx& dbi, const std::string& key, int64_t& cursor, const char* pattern, uint32_t count, ArrayReply& array, xRedisContext& ctx) {
+    return ScanFun("SSCAN", dbi, &key, cursor, pattern, count, array, ctx);
+}

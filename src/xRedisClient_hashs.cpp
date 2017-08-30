@@ -33,7 +33,7 @@ bool xRedisClient::hget(const RedisDBIdx& dbi, const string& key, const string& 
     return command_string(dbi, value, "HGET %s %s", key.c_str(), field.c_str());
 }
 
-bool  xRedisClient::hgetall(const RedisDBIdx& dbi, const string& key, ArrayReply& array) {
+bool xRedisClient::hgetall(const RedisDBIdx& dbi, const string& key, ArrayReply& array) {
     SETDEFAULTIOTYPE(SLAVE);
     return command_array(dbi, array, "HGETALL %s", key.c_str());
 }
@@ -104,4 +104,6 @@ bool xRedisClient::hvals(const RedisDBIdx& dbi, const string& key, VALUES& value
     return command_list(dbi, values, "HVALS %s", key.c_str());
 }
 
-
+bool xRedisClient::hscan(const RedisDBIdx& dbi, const std::string& key, int64_t& cursor, const char* pattern, uint32_t count, ArrayReply& array, xRedisContext& ctx) {
+    return ScanFun("HSCAN", dbi, &key, cursor, pattern, count, array, ctx);
+}
