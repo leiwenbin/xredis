@@ -41,6 +41,10 @@ bool RedisDBIdx::CreateDBIndex(const int64_t id, const unsigned int type) {
     return false;
 }
 
+unsigned int RedisDBIdx::GetIndex() {
+    return mIndex;
+}
+
 void RedisDBIdx::IOtype(unsigned int type) {
     mIOtype = type;
 }
