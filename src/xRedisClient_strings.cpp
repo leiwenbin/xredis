@@ -7,6 +7,7 @@
  */
 
 #include <sstream>
+#include <redis/xredis/xRedisPool.h>
 #include <redis/xredis/xRedisClient.h>
 
 bool xRedisClient::psetex(const RedisDBIdx& dbi, const string& key, int milliseconds, const string& value) {
@@ -38,6 +39,26 @@ bool xRedisClient::set(const RedisDBIdx& dbi, const string& key, const char* val
         return command_bool(dbi, "set %s %b", key.c_str(), value, len);
     else
         return command_bool(dbi, "set %s %b EX %d", key.c_str(), value, len, second);
+}
+
+bool xRedisClient::set(const RedisDBIdx& dbi, const string& key, const string& value, SETPXEX pxex, int expiretime, SETNXXX nxxx) {
+    static const char* pXflag[] = {"px", "ex", "nx", "xx"};
+    SETDEFAULTIOTYPE(MASTER);
+
+    VDATA vCmdData;
+    vCmdData.push_back("SET");
+    vCmdData.push_back(key);
+    vCmdData.push_back(value);
+
+    if (pxex > 0) {
+        vCmdData.push_back((pxex == PX) ? pXflag[0] : pXflag[1]);
+        vCmdData.push_back(toString(expiretime));
+    }
+
+    if (nxxx > 0)
+        vCmdData.push_back((nxxx == NX) ? pXflag[2] : pXflag[3]);
+
+    return commandargv_status(dbi, vCmdData);
 }
 
 bool xRedisClient::setbit(const RedisDBIdx& dbi, const string& key, int offset, int64_t newbitValue, int64_t oldbitValue) {

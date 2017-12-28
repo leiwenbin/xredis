@@ -168,7 +168,7 @@ bool xRedisClusterClient::ClusterEnabled(redisContext* ctx) {
     }
     //printf("redis info:\r\n%s\r\n", redis_reply->str);
     char* p = strstr(redis_reply->str, "cluster_enabled:");
-    bool bRet = p != NULL && (0 == strncmp(p + strlen("cluster_enabled:"), "1", 1));
+    bool bRet = (0 == strncmp(p + strlen("cluster_enabled:"), "1", 1));
     //printf("--:%s\r\n", p + strlen("cluster_enabled:"));
     freeReplyObject(redis_reply);
     return bRet;
@@ -177,9 +177,8 @@ bool xRedisClusterClient::ClusterEnabled(redisContext* ctx) {
 bool xRedisClusterClient::Clusterinfo(redisContext* ctx) {
     redisReply* redis_reply = (redisReply*) redisCommand(ctx, "CLUSTER info");
     if ((NULL == redis_reply) || (NULL == redis_reply->str)) {
-        if (redis_reply) {
+        if (NULL != redis_reply)
             freeReplyObject(redis_reply);
-        }
         return false;
     }
     //printf("Clusterinfo:\r\n%s\r\n", redis_reply->str);
@@ -191,7 +190,6 @@ bool xRedisClusterClient::Clusterinfo(redisContext* ctx) {
 
 bool xRedisClusterClient::ReConnectRedis(RedisConnection* pConn) {
     Release();
-
     return ConnectRedis(pConn->mHost, pConn->mPort, pConn->mPoolSize);
 }
 
