@@ -8,7 +8,6 @@
 
 #include <sstream>
 #include <redis/xredis/xRedisPool.h>
-#include <redis/xredis/xRedisClient.h>
 
 bool xRedisClient::psetex(const RedisDBIdx& dbi, const string& key, int milliseconds, const string& value) {
     SETDEFAULTIOTYPE(MASTER);

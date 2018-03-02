@@ -96,7 +96,7 @@ inline RedisPool* xRedisClient::GetRedisPool() {
     return mRedisPool;
 }
 
-bool xRedisClient::ConnectRedisCache(const RedisNode *redisnodelist, unsigned int nodecount, unsigned int hashbase, unsigned int cachetype) {
+bool xRedisClient::ConnectRedisCache(const RedisNode* redisnodelist, unsigned int nodecount, unsigned int hashbase, unsigned int cachetype) {
     if (NULL == mRedisPool) return false;
 
     if (!mRedisPool->setHashBase(cachetype, hashbase)) return false;
