@@ -1,6 +1,6 @@
 /*
  * ----------------------------------------------------------------------------
- * Copyright (c) 2013-2014, xSky <guozhw at gmail dot com>
+ * Copyright (c) 2013-2014, Leiwenbin
  * All rights reserved.
  * Distributed under GPL license.
  * ----------------------------------------------------------------------------

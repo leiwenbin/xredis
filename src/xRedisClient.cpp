@@ -1,6 +1,6 @@
 /*
  * ----------------------------------------------------------------------------
- * Copyright (c) 2013-2014, xSky <guozhw at gmail dot com>
+ * Copyright (c) 2013-2014, Leiwenbin
  * All rights reserved.
  * Distributed under GPL license.
  * ----------------------------------------------------------------------------
@@ -21,8 +21,8 @@ RedisDBIdx::RedisDBIdx(xRedisClient* xredisclient) {
 RedisDBIdx::~RedisDBIdx() {
 }
 
-bool RedisDBIdx::CreateDBIndex(const char* key, HASHFUN fun, const unsigned int type) {
-    unsigned int hashbase = mClient->GetRedisPool()->getHashBase(type);
+bool RedisDBIdx::CreateDBIndex(const char* key, HASHFUN fun, const uint32_t type) {
+    uint32_t hashbase = mClient->GetRedisPool()->getHashBase(type);
     if ((NULL != fun) && (hashbase > 0)) {
         mIndex = fun(key) % hashbase;
         mType = type;
@@ -31,21 +31,21 @@ bool RedisDBIdx::CreateDBIndex(const char* key, HASHFUN fun, const unsigned int 
     return false;
 }
 
-bool RedisDBIdx::CreateDBIndex(const int64_t id, const unsigned int type) {
-    unsigned int hashbase = mClient->GetRedisPool()->getHashBase(type);
+bool RedisDBIdx::CreateDBIndex(const int64_t id, const uint32_t type) {
+    uint32_t hashbase = mClient->GetRedisPool()->getHashBase(type);
     if (hashbase > 0) {
         mType = type;
-        mIndex = (unsigned int) (id % hashbase);
+        mIndex = (uint32_t) (id % hashbase);
         return true;
     }
     return false;
 }
 
-unsigned int RedisDBIdx::GetIndex() {
+uint32_t RedisDBIdx::GetIndex() {
     return mIndex;
 }
 
-void RedisDBIdx::IOtype(unsigned int type) {
+void RedisDBIdx::IOtype(uint32_t type) {
     mIOtype = type;
 }
 
@@ -69,7 +69,7 @@ xRedisClient::~xRedisClient() {
     Release();
 }
 
-bool xRedisClient::Init(unsigned int maxtype) {
+bool xRedisClient::Init(uint32_t maxtype) {
     if (NULL == mRedisPool) {
         mRedisPool = new RedisPool;
         if (NULL == mRedisPool) return false;
@@ -96,12 +96,12 @@ inline RedisPool* xRedisClient::GetRedisPool() {
     return mRedisPool;
 }
 
-bool xRedisClient::ConnectRedisCache(const RedisNode* redisnodelist, unsigned int nodecount, unsigned int hashbase, unsigned int cachetype) {
+bool xRedisClient::ConnectRedisCache(const RedisNode* redisnodelist, uint32_t nodecount, uint32_t hashbase, uint32_t cachetype) {
     if (NULL == mRedisPool) return false;
 
     if (!mRedisPool->setHashBase(cachetype, hashbase)) return false;
 
-    for (unsigned int n = 0; n < nodecount; n++) {
+    for (uint32_t n = 0; n < nodecount; n++) {
         const RedisNode* pNode = &redisnodelist[n];
         if (NULL == pNode) return false;
 
@@ -123,7 +123,7 @@ void xRedisClient::SetErrInfo(const RedisDBIdx& dbi, void* p) {
         SetErrString(dbi, CONNECT_CLOSED_ERROR, ::strlen(CONNECT_CLOSED_ERROR));
     } else {
         redisReply* reply = (redisReply*) p;
-        SetErrString(dbi, reply->str, static_cast<int>(reply->len));
+        SetErrString(dbi, reply->str, static_cast<int32_t>(reply->len));
     }
 }
 
@@ -132,7 +132,7 @@ void xRedisClient::SetErrString(const RedisDBIdx& dbi, const char* str, size_t l
     dbindex.SetErrInfo(str, len);
 }
 
-void xRedisClient::SetIOtype(const RedisDBIdx& dbi, unsigned int iotype, bool ioflag) {
+void xRedisClient::SetIOtype(const RedisDBIdx& dbi, uint32_t iotype, bool ioflag) {
     RedisDBIdx& dbindex = const_cast<RedisDBIdx&>(dbi);
     dbindex.IOtype(iotype);
     dbindex.mIOFlag = ioflag;
@@ -334,12 +334,12 @@ bool xRedisClient::commandargv_array_ex(const RedisDBIdx& dbi, const VDATA& vDat
 
     vector<const char*> argv(vDataIn.size());
     vector<size_t> argvlen(vDataIn.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vDataIn.begin(); i != vDataIn.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply))
         bRet = true;
     else
@@ -350,12 +350,12 @@ bool xRedisClient::commandargv_array_ex(const RedisDBIdx& dbi, const VDATA& vDat
     return bRet;
 }
 
-int xRedisClient::GetReply(xRedisContext* ctx, ReplyData& vData) {
+int32_t xRedisClient::GetReply(xRedisContext* ctx, ReplyData& vData) {
     //vData.clear();
     //ReplyData(vData).swap(vData);
     redisReply* reply;
     RedisConn* pRedisConn = static_cast<RedisConn*>(ctx->conn);
-    int ret = redisGetReply(pRedisConn->getCtx(), (void**) &reply);
+    int32_t ret = redisGetReply(pRedisConn->getCtx(), (void**) &reply);
     if (0 == ret) {
         for (size_t i = 0; i < reply->elements; i++) {
             DataItem item;
@@ -396,12 +396,12 @@ bool xRedisClient::commandargv_bool(const RedisDBIdx& dbi, const VDATA& vData) {
 
     vector<const char*> argv(vData.size());
     vector<size_t> argvlen(vData.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vData.begin(); i != vData.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply))
         bRet = reply->integer == 1;
     else
@@ -423,12 +423,12 @@ bool xRedisClient::commandargv_status(const RedisDBIdx& dbi, const VDATA& vData)
 
     vector<const char*> argv(vData.size());
     vector<size_t> argvlen(vData.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vData.begin(); i != vData.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         // Assume good reply until further inspection
         bRet = true;
@@ -457,12 +457,12 @@ bool xRedisClient::commandargv_array(const RedisDBIdx& dbi, const VDATA& vDataIn
 
     vector<const char*> argv(vDataIn.size());
     vector<size_t> argvlen(vDataIn.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vDataIn.begin(); i != vDataIn.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         for (size_t i = 0; i < reply->elements; i++) {
             DataItem item;
@@ -490,12 +490,12 @@ bool xRedisClient::commandargv_array(const RedisDBIdx& dbi, const VDATA& vDataIn
 
     vector<const char*> argv(vDataIn.size());
     vector<size_t> argvlen(vDataIn.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vDataIn.begin(); i != vDataIn.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         for (size_t i = 0; i < reply->elements; i++) {
             string str(reply->element[i]->str, reply->element[i]->len);
@@ -521,12 +521,12 @@ bool xRedisClient::commandargv_integer(const RedisDBIdx& dbi, const VDATA& vData
 
     vector<const char*> argv(vDataIn.size());
     vector<size_t> argvlen(vDataIn.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator iter = vDataIn.begin(); iter != vDataIn.end(); ++iter, ++j) {
         argv[j] = iter->c_str(), argvlen[j] = iter->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         retval = reply->integer;
         bRet = true;
@@ -569,12 +569,12 @@ bool xRedisClient::ScanFun(const char* cmd, const RedisDBIdx& dbi, const std::st
 
     vector<const char*> argv(vCmdData.size());
     vector<size_t> argvlen(vCmdData.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vCmdData.begin(); i != vCmdData.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->getCtx(), static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
     if (RedisPool::CheckReply(reply)) {
         if (0 == reply->elements) {
             cursor = 0;

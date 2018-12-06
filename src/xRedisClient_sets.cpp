@@ -1,6 +1,6 @@
 /*
  * ----------------------------------------------------------------------------
- * Copyright (c) 2013-2014, xSky <guozhw at gmail dot com>
+ * Copyright (c) 2013-2014, Leiwenbin
  * All rights reserved.
  * Distributed under GPL license.
  * ----------------------------------------------------------------------------
@@ -31,7 +31,7 @@ bool xRedisClient::sdiff(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue)
 
     DBIArray::const_iterator iter_dbi = vdbi.begin();
     KEYS::const_iterator iter_key = vkey.begin();
-    int i = 0;
+    int32_t i = 0;
     for (; iter_key != vkey.end(); ++iter_key, ++iter_dbi, ++i) {
         const string& key = *iter_key;
         const RedisDBIdx& dbi = *iter_dbi;
@@ -64,7 +64,7 @@ bool xRedisClient::sinter(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue
 
     DBIArray::const_iterator iter_dbi = vdbi.begin();
     KEYS::const_iterator iter_key = vkey.begin();
-    int i = 0;
+    int32_t i = 0;
     for (; iter_key != vkey.end(); ++iter_key, ++iter_dbi, ++i) {
         const string& key = *iter_key;
         const RedisDBIdx& dbi = *iter_dbi;
@@ -113,7 +113,7 @@ bool xRedisClient::spop(const RedisDBIdx& dbi, const KEY& key, VALUE& member) {
     return command_string(dbi, member, "SPOP %s", key.c_str());
 }
 
-bool xRedisClient::srandmember(const RedisDBIdx& dbi, const KEY& key, VALUES& members, int count) {
+bool xRedisClient::srandmember(const RedisDBIdx& dbi, const KEY& key, VALUES& members, int32_t count) {
     if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(SLAVE);
     if (0 == count)
@@ -138,7 +138,7 @@ bool xRedisClient::sunion(const DBIArray& vdbi, const KEYS& vkey, VALUES& sValue
 
     DBIArray::const_iterator iter_dbi = vdbi.begin();
     KEYS::const_iterator iter_key = vkey.begin();
-    int i = 0;
+    int32_t i = 0;
     for (; iter_key != vkey.end(); ++iter_key, ++iter_dbi, ++i) {
         const string& key = *iter_key;
         const RedisDBIdx& dbi = *iter_dbi;

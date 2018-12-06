@@ -1,6 +1,6 @@
 /*
  * ----------------------------------------------------------------------------
- * Copyright (c) 2013-2014, xSky <guozhw at gmail dot com>
+ * Copyright (c) 2013-2014, Leiwenbin
  * All rights reserved.
  * Distributed under GPL license.
  * ----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ bool xRedisClient::punsubscribe(const RedisDBIdx& dbi, const KEYS& patterns, xRe
 
     vector<const char*> argv(vCmdData.size());
     vector<size_t> argvlen(vCmdData.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vCmdData.begin(); i != vCmdData.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
@@ -93,7 +93,7 @@ bool xRedisClient::unsubscribe(const RedisDBIdx& dbi, const KEYS& channels, xRed
 
     vector<const char*> argv(vCmdData.size());
     vector<size_t> argvlen(vCmdData.size());
-    unsigned int j = 0;
+    uint32_t j = 0;
     for (VDATA::const_iterator i = vCmdData.begin(); i != vCmdData.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }

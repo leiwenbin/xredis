@@ -1,6 +1,6 @@
 /*
  * ----------------------------------------------------------------------------
- * Copyright (c) 2013-2014, xSky <guozhw at gmail dot com>
+ * Copyright (c) 2013-2014, Leiwenbin
  * All rights reserved.
  * Distributed under GPL license.
  * ----------------------------------------------------------------------------
@@ -62,19 +62,19 @@ bool xRedisClient::lrange(const RedisDBIdx& dbi, const string& key, int64_t star
     return command_array(dbi, array, "LRANGE %s %lld %lld", key.c_str(), start, end);
 }
 
-bool xRedisClient::lrem(const RedisDBIdx& dbi, const string& key, int count, const string& value, int64_t num) {
+bool xRedisClient::lrem(const RedisDBIdx& dbi, const string& key, int32_t count, const string& value, int64_t num) {
     if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(MASTER);
     return command_integer(dbi, num, "LREM %s %d %s", key.c_str(), count, value.c_str());
 }
 
-bool xRedisClient::lset(const RedisDBIdx& dbi, const string& key, int index, const string& value) {
+bool xRedisClient::lset(const RedisDBIdx& dbi, const string& key, int32_t index, const string& value) {
     if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(MASTER);
     return command_status(dbi, "LSET %s %d %s", key.c_str(), index, value.c_str());
 }
 
-bool xRedisClient::ltrim(const RedisDBIdx& dbi, const string& key, int start, int end) {
+bool xRedisClient::ltrim(const RedisDBIdx& dbi, const string& key, int32_t start, int32_t end) {
     if (0 == key.length()) return false;
     SETDEFAULTIOTYPE(MASTER);
     return command_status(dbi, "LTRIM %s %d %d", key.c_str(), start, end);
