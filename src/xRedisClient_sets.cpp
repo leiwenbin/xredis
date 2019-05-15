@@ -13,13 +13,13 @@ bool xRedisClient::sadd(const RedisDBIdx& dbi, const string& key, const VALUES& 
     vCmdData.push_back("SADD");
     vCmdData.push_back(key);
     addparam(vCmdData, vValue);
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return commandargv_integer(dbi, vCmdData, count);
 }
 
 bool xRedisClient::scard(const RedisDBIdx& dbi, const string& key, int64_t& count) {
     if (0 == key.length()) return false;
-    SETDEFAULTIOTYPE(SLAVE);
+    SETDEFAULTIOTYPE(SLAVE)
     return command_integer(dbi, count, "SCARD %s", key.c_str());
 }
 
@@ -97,25 +97,25 @@ bool xRedisClient::sismember(const RedisDBIdx& dbi, const KEY& key, const VALUE&
 
 bool xRedisClient::smembers(const RedisDBIdx& dbi, const KEY& key, VALUES& vValue) {
     if (0 == key.length()) return false;
-    SETDEFAULTIOTYPE(SLAVE);
+    SETDEFAULTIOTYPE(SLAVE)
     return command_list(dbi, vValue, "SMEMBERS %s", key.c_str());
 }
 
 bool xRedisClient::smove(const RedisDBIdx& dbi, const KEY& srckey, const KEY& deskey, const VALUE& member) {
     if (0 == srckey.length()) return false;
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_bool(dbi, "SMOVE %s", srckey.c_str(), deskey.c_str(), member.c_str());
 }
 
 bool xRedisClient::spop(const RedisDBIdx& dbi, const KEY& key, VALUE& member) {
     if (0 == key.length()) return false;
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_string(dbi, member, "SPOP %s", key.c_str());
 }
 
 bool xRedisClient::srandmember(const RedisDBIdx& dbi, const KEY& key, VALUES& members, int32_t count) {
     if (0 == key.length()) return false;
-    SETDEFAULTIOTYPE(SLAVE);
+    SETDEFAULTIOTYPE(SLAVE)
     if (0 == count)
         return command_list(dbi, members, "SRANDMEMBER %s", key.c_str());
     return command_list(dbi, members, "SRANDMEMBER %s %d", key.c_str(), count);
@@ -123,7 +123,7 @@ bool xRedisClient::srandmember(const RedisDBIdx& dbi, const KEY& key, VALUES& me
 
 bool xRedisClient::srem(const RedisDBIdx& dbi, const KEY& key, const VALUES& vmembers, int64_t& count) {
     if (0 == key.length()) return false;
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back("SREM");
     vCmdData.push_back(key);

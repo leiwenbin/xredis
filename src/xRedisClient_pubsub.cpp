@@ -10,7 +10,7 @@
 #include <redis/xredis/xRedisPool.h>
 
 bool xRedisClient::psubscribe(const RedisDBIdx& dbi, const KEYS& patterns, xRedisContext& ctx) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back("PSUBSCRIBE");
     addparam(vCmdData, patterns);
@@ -18,17 +18,17 @@ bool xRedisClient::psubscribe(const RedisDBIdx& dbi, const KEYS& patterns, xRedi
 }
 
 bool xRedisClient::publish(const RedisDBIdx& dbi, const KEY& channel, const std::string& message, int64_t& count) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_integer(dbi, count, "PUBLISH %s %s", channel.c_str(), message.c_str(), count);
 }
 
 bool xRedisClient::pubsub_channels(const RedisDBIdx& dbi, const std::string& pattern, ArrayReply& reply) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_array(dbi, reply, "pubsub channels %s", pattern.c_str());
 }
 
 bool xRedisClient::pubsub_numsub(const RedisDBIdx& dbi, const KEYS& keys, ArrayReply& reply) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back("pubsub");
     vCmdData.push_back("numsub");
@@ -37,12 +37,12 @@ bool xRedisClient::pubsub_numsub(const RedisDBIdx& dbi, const KEYS& keys, ArrayR
 }
 
 bool xRedisClient::pubsub_numpat(const RedisDBIdx& dbi, int64_t& count) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_integer(dbi, count, "pubsub numpat");
 }
 
 bool xRedisClient::punsubscribe(const RedisDBIdx& dbi, const KEYS& patterns, xRedisContext& ctx) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back("PUNSUBSCRIBE");
     addparam(vCmdData, patterns);
@@ -71,7 +71,7 @@ bool xRedisClient::punsubscribe(const RedisDBIdx& dbi, const KEYS& patterns, xRe
 }
 
 bool xRedisClient::subscribe(const RedisDBIdx& dbi, const KEYS& channels, xRedisContext& ctx) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back("SUBSCRIBE");
     addparam(vCmdData, channels);
@@ -79,7 +79,7 @@ bool xRedisClient::subscribe(const RedisDBIdx& dbi, const KEYS& channels, xRedis
 }
 
 bool xRedisClient::unsubscribe(const RedisDBIdx& dbi, const KEYS& channels, xRedisContext& ctx) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back("UNSUBSCRIBE");
     addparam(vCmdData, channels);

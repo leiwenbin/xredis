@@ -426,10 +426,10 @@ void RedisCache::KeepAlive() {
 }
 
 uint32_t RedisCache::GetDBStatus(uint32_t dbindex) {
-    RedisDBSlice* pdbSclice = &mDBList[dbindex];
-    if (NULL == pdbSclice)
+    RedisDBSlice* pdbSlice = &mDBList[dbindex];
+    if (NULL == pdbSlice)
         return REDISDB_UNCONN;
-    return pdbSclice->GetStatus();
+    return pdbSlice->GetStatus();
 }
 
 void RedisCache::FreeConn(RedisConn* redisconn) {

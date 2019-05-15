@@ -15,13 +15,13 @@ void xRedisClient::quit() {
 
 bool xRedisClient::echo(const RedisDBIdx& dbi, const string& str, std::string& value) {
     if (0 == str.length()) return false;
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_string(dbi, value, "echo %s", str.c_str());
 }
 
 bool xRedisClient::select(const RedisDBIdx& dbi, int32_t pos) {
     if (pos < 1) return false;
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     return command_bool(dbi, "SELECT %d", pos);
 }
 

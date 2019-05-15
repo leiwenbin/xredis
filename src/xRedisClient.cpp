@@ -541,7 +541,7 @@ bool xRedisClient::commandargv_integer(const RedisDBIdx& dbi, const VDATA& vData
 
 bool xRedisClient::ScanFun(const char* cmd, const RedisDBIdx& dbi, const std::string* key,
                            int64_t& cursor, const char* pattern, uint32_t count, ArrayReply& array, xRedisContext& ctx) {
-    SETDEFAULTIOTYPE(MASTER);
+    SETDEFAULTIOTYPE(MASTER)
     VDATA vCmdData;
     vCmdData.push_back(cmd);
     if (NULL != key) {
