@@ -1,0 +1,9 @@
+examples
+CMakeFiles
+test
+makefile
+makefile.make
+.idea
+CMakeCache.txt
+xredis.cbp
+cmake_install.cmake

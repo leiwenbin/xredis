@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(xredis)
 
-option(C++11_ENABLE "C++11_ENABLE" OFF)
+option(C++11_ENABLE "C++11_ENABLE" ON)
 
 SET(CMAKE_C_COMPILER "/usr/bin/gcc")
 SET(CMAKE_CXX_COMPILER "/usr/bin/c++")

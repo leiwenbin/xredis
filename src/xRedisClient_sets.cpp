@@ -104,7 +104,7 @@ bool xRedisClient::smembers(const RedisDBIdx& dbi, const KEY& key, VALUES& vValu
 bool xRedisClient::smove(const RedisDBIdx& dbi, const KEY& srckey, const KEY& deskey, const VALUE& member) {
     if (0 == srckey.length()) return false;
     SETDEFAULTIOTYPE(MASTER)
-    return command_bool(dbi, "SMOVE %s", srckey.c_str(), deskey.c_str(), member.c_str());
+    return command_bool(dbi, "SMOVE %s %s %s", srckey.c_str(), deskey.c_str(), member.c_str());
 }
 
 bool xRedisClient::spop(const RedisDBIdx& dbi, const KEY& key, VALUE& member) {
