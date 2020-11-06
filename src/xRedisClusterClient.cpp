@@ -1,13 +1,6 @@
-/*
- * ----------------------------------------------------------------------------
- * Copyright (c) 2013-2014, Leiwenbin
- * All rights reserved.
- * Distributed under GPL license.
- * ----------------------------------------------------------------------------
- */
-
 #include <redis/xredis/xRedisClusterClient.h>
 
+using namespace xrcp;
 
 static const uint16_t crc16tab[256] = {
         0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -44,8 +37,8 @@ static const uint16_t crc16tab[256] = {
         0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
 };
 
-uint16_t xRedisClusterClient::crc16(const char* buf, size_t len) {
-    uint32_t counter;
+uint16_t xRedisClusterClient::crc16(const char* buf, int32_t len) {
+    int32_t counter;
     uint16_t crc = 0;
     for (counter = 0; counter < len; counter++)
         crc = (crc << 8) ^ crc16tab[((crc >> 8) ^ *buf++) & 0x00FF];
@@ -88,12 +81,12 @@ void xRedisClusterClient::FreeReply(const redisReply* reply) {
     }
 }
 
-int32_t xRedisClusterClient::str2Vect(const char* pSrc, vector<string>& vDest, const char* pSep) {
+int32_t xRedisClusterClient::Str2Vect(const char* pSrc, std::vector<std::string>& vDest, const char* pSep) {
     if (NULL == pSrc) {
         return -1;
     }
 
-    size_t iLen = strlen(pSrc);
+    int32_t iLen = strlen(pSrc);
     if (iLen == 0) {
         return -1;
     }
@@ -125,7 +118,7 @@ xRedisClusterClient::~xRedisClusterClient() {
 }
 
 bool xRedisClusterClient::GetClusterNodes(redisContext* redis_ctx) {
-    vector<string> vlines;
+    std::vector<std::string> vlines;
     redisReply* redis_reply = (redisReply*) redisCommand(redis_ctx, "CLUSTER NODES");
     if ((NULL == redis_reply) || (NULL == redis_reply->str)) {
         if (redis_reply) {
@@ -135,26 +128,19 @@ bool xRedisClusterClient::GetClusterNodes(redisContext* redis_ctx) {
         return false;
     }
 
-    str2Vect(redis_reply->str, vlines, "\n");
-    printf("vlines:%lu\r\n", vlines.size());
-
+    Str2Vect(redis_reply->str, vlines, "\n");
     for (size_t i = 0; i < vlines.size(); ++i) {
         NodeInfo node;
         node.strinfo = vlines[i];
 
-        vector<string> nodeinfo;
-        str2Vect(node.strinfo.c_str(), nodeinfo, " ");
-        for (size_t k = 0; k < nodeinfo.size(); ++k) {
-            printf("%lu : %s \r\n", k, nodeinfo[k].c_str());
-        }
+        std::vector<std::string> nodeinfo;
+        Str2Vect(node.strinfo.c_str(), nodeinfo, " ");
         if (NULL == strstr(nodeinfo[2].c_str(), "master")) {
-            printf("%s \r\n", nodeinfo[2].c_str());
             continue;
         }
         node.id = nodeinfo[0];
         node.ParseNodeString(nodeinfo[1]);
         node.ParseSlotString(nodeinfo[8]);
-        printf("------------------------\r\n");
     }
 
     freeReplyObject(redis_reply);
@@ -162,13 +148,6 @@ bool xRedisClusterClient::GetClusterNodes(redisContext* redis_ctx) {
 }
 
 void xRedisClusterClient::Keepalive() {
-    //RedisConnIter iter = mRedisConnList.begin();
-    //for (; iter != mRedisConnList.end(); iter++) {
-    //    redisReply *reply = (redisReply *)redisCommand((*iter)->c,"PING");
-    //    printf("PING: %s\n", reply->str);
-    //    freeReplyObject(reply);
-    //}
-
     size_t node_count = vNodes.size();
     for (size_t i = 0; i < node_count; ++i) {
         XLOCK(mLock[i]);
@@ -176,10 +155,8 @@ void xRedisClusterClient::Keepalive() {
         RedisConnectionIter iter = pList->begin();
         for (; iter != pList->end(); iter++) {
             RedisConnection* pConn = *iter;
-            redisReply* reply = static_cast<redisReply*>(redisCommand(pConn->mCtx, "PING"));
-            bool bRet = (NULL != reply);
-            if (bRet) {
-                freeReplyObject(reply);
+            if (!pConn->Ping()) {
+                pConn->RedisReConnect();
             }
         }
     }
@@ -212,14 +189,7 @@ void xRedisClusterClient::Release() {
 #define REDIS_REPLY_ERROR 6
 
 bool xRedisClusterClient::CheckReply(redisReply* reply) {
-    if (NULL == reply) {
-        printf("error, reply is NULL \r\n");
-        return false;
-    }
-
-    printf("DEBBUG %d:%s \r\n", reply->type, reply->str);
-
-    return true;
+    return NULL != reply;
 }
 
 bool xRedisClusterClient::ClusterEnabled(redisContext* ctx) {
@@ -230,13 +200,14 @@ bool xRedisClusterClient::ClusterEnabled(redisContext* ctx) {
         }
         return false;
     }
+
     char* p = strstr(redis_reply->str, "cluster_enabled:");
     bool bRet = p != NULL && (0 == strncmp(p + strlen("cluster_enabled:"), "1", 1));
     freeReplyObject(redis_reply);
     return bRet;
 }
 
-bool xRedisClusterClient::Clusterinfo(redisContext* ctx) {
+bool xRedisClusterClient::ClusterInfo(redisContext* ctx) {
     redisReply* redis_reply = (redisReply*) redisCommand(ctx, "CLUSTER info");
     if ((NULL == redis_reply) || (NULL == redis_reply->str)) {
         if (redis_reply) {
@@ -253,48 +224,56 @@ bool xRedisClusterClient::Clusterinfo(redisContext* ctx) {
 bool xRedisClusterClient::ReConnectRedis(RedisConnection* pConn) {
     Release();
 
-    return ConnectRedis(pConn->mHost, pConn->mPort, pConn->mPoolSize);
+    return ConnectRedis(pConn->mHost, pConn->mPort, pConn->mPass, pConn->mPoolSize);
 }
 
-bool xRedisClusterClient::ConnectRedis(const char* host, uint32_t port, uint32_t poolsize) {
-    if (NULL == host) {
-        printf("error argv \r\n");
-        return false;
+bool xRedisClusterClient::auth(redisContext* c, const std::string& pass) {
+    bool bRet;
+    if (0 == pass.length()) {
+        bRet = true;
+    } else {
+        redisReply* reply = static_cast<redisReply*>(redisCommand(c, "AUTH %s", pass.c_str()));
+        bRet = !((NULL == reply) || (strcasecmp(reply->str, "OK") != 0));
+        freeReplyObject(reply);
     }
 
+    return bRet;
+}
+
+bool xRedisClusterClient::ConnectRedis(const std::string& host, uint32_t port, const std::string& pass, uint32_t poolsize) {
     struct timeval timeoutVal;
     timeoutVal.tv_sec = 5;
     timeoutVal.tv_usec = 0;
     mPoolSize = poolsize;
 
-    redisContext* redis_ctx = redisConnectWithTimeout(host, port, timeoutVal);
-    if (redis_ctx == NULL || redis_ctx->err) {
-        if (redis_ctx) {
-            printf("Connection error: %s \r\n", redis_ctx->errstr);
+    redisContext* redis_ctx = redisConnectWithTimeout(host.c_str(), port, timeoutVal);
+    if (redis_ctx != NULL) {
+        fprintf(stderr, "Connection error: can't allocate redis context, %s  \n", redis_ctx->errstr);
+        redisFree(redis_ctx);
+        return false;
+    } else {
+        if (!auth(redis_ctx, pass)) {
             redisFree(redis_ctx);
             return false;
-        } else {
-            printf("Connection error: can't allocate redis context \n");
         }
-    } else {
-        printf("Connect to Redis: %s:%d  success \n", host, port);
     }
 
     mClusterEnabled = ClusterEnabled(redis_ctx);
-    printf("ClusterEnabled %d \r\n", mClusterEnabled);
 
     if (!mClusterEnabled) {
         mRedisConnList = new RedisConnectionList[1];
-        ConnectRedisNode(0, host, port, mPoolSize);
+        mLock = new xLock[1];
+        ConnectRedisNode(0, host, port, pass, poolsize);
+        redisFree(redis_ctx);
         return true;
     }
 
-    if (!Clusterinfo(redis_ctx)) {
-        printf("Clusterinfo error \r\n");
+    if (!ClusterInfo(redis_ctx)) {
+        redisFree(redis_ctx);
         return false;
     }
 
-    vector<string> vlines;
+    std::vector<std::string> vlines;
     redisReply* redis_reply = (redisReply*) redisCommand(redis_ctx, "CLUSTER NODES");
     if ((NULL == redis_reply) || (NULL == redis_reply->str)) {
         if (redis_reply) {
@@ -304,85 +283,80 @@ bool xRedisClusterClient::ConnectRedis(const char* host, uint32_t port, uint32_t
         return false;
     }
 
-    str2Vect(redis_reply->str, vlines, "\n");
-    printf("vlines:%lu\r\n", vlines.size());
+    Str2Vect(redis_reply->str, vlines, "\n");
 
     for (size_t i = 0; i < vlines.size(); ++i) {
         NodeInfo node;
         node.strinfo = vlines[i];
 
-        vector<string> nodeinfo;
-        str2Vect(node.strinfo.c_str(), nodeinfo, " ");
-        for (size_t k = 0; k < nodeinfo.size(); ++k) {
-            printf("%lu : %s \r\n", k, nodeinfo[k].c_str());
-        }
+        std::vector<std::string> nodeinfo;
+        Str2Vect(node.strinfo.c_str(), nodeinfo, " ");
+        //for (size_t k = 0; k < nodeinfo.size(); ++k) {
+        //    //printf("%lu : %s \r\n", k, nodeinfo[k].c_str());
+        //}
         if (NULL != strstr(nodeinfo[7].c_str(), "disconnected")) {
             continue;
         }
         if (NULL == strstr(nodeinfo[2].c_str(), "master")) {
-            printf("%s \r\n", nodeinfo[2].c_str());
+            fprintf(stderr, "%s \r\n", nodeinfo[2].c_str());
             continue;
         }
         node.id = nodeinfo[0];
         node.ParseNodeString(nodeinfo[1]);
         node.ParseSlotString(nodeinfo[8]);
-        printf("------------------------\r\n");
         vNodes.push_back(node);
     }
 
     freeReplyObject(redis_reply);
     redisFree(redis_ctx);
 
-//    XLOCK(mLock);
-    uint32_t cnt = static_cast<uint32_t>(vNodes.size());
+    int32_t cnt = vNodes.size();
     mRedisConnList = new RedisConnectionList[cnt];
     mLock = new xLock[cnt];
-    for (uint32_t i = 0; i < cnt; ++i) {
-        ConnectRedisNode(i, vNodes[i].ip.c_str(), vNodes[i].port, mPoolSize);
+    for (int32_t i = 0; i < cnt; ++i) {
+        ConnectRedisNode(i, vNodes[i].ip.c_str(), vNodes[i].port, pass, poolsize);
     }
 
     return true;
 }
 
-bool xRedisClusterClient::ConnectRedisNode(uint32_t idx, const char* host, uint32_t port, uint32_t poolsize) {
-    if (NULL == host) {
-        printf("error argv \r\n");
+bool xRedisClusterClient::ConnectRedisNode(int32_t idx, const std::string& host, uint32_t port, const std::string& pass, uint32_t poolsize) {
+    if (0 == host.length()) {
         return false;
     }
 
     //同时打开 CONNECTION_NUM 个连接
-    try {
-        poolsize = poolsize > MAX_REDIS_POOLSIZE ? MAX_REDIS_POOLSIZE : poolsize;
+    poolsize = poolsize > MAX_REDIS_POOLSIZE ? MAX_REDIS_POOLSIZE : poolsize;
 
-        for (uint32_t i = 0; i < poolsize; ++i) {
-            struct timeval timeoutVal;
-            timeoutVal.tv_sec = MAX_TIME_OUT;
-            timeoutVal.tv_usec = 0;
+    for (uint32_t i = 0; i < poolsize; ++i) {
+        struct timeval timeoutVal;
+        timeoutVal.tv_sec = MAX_TIME_OUT;
+        timeoutVal.tv_usec = 0;
 
-            RedisConnection* pRedisconn = new RedisConnection;
-            pRedisconn->mHost = host;
-            pRedisconn->mPort = port;
-            pRedisconn->mPoolSize = poolsize;
-            pRedisconn->mIndex = idx;
-            pRedisconn->mCtx = redisConnectWithTimeout(host, port, timeoutVal);
-            if (pRedisconn->mCtx == NULL || pRedisconn->mCtx->err) {
-                if (pRedisconn->mCtx) {
-                    printf("Connection error: %s \r\n", pRedisconn->mCtx->errstr);
-                    redisFree(pRedisconn->mCtx);
-                } else {
-                    printf("Connection error: can't allocate redis context, %s  \n", pRedisconn->mCtx->errstr);
-                }
-                delete pRedisconn;
+        RedisConnection* pRedisconn = new RedisConnection;
+        pRedisconn->mHost = host;
+        pRedisconn->mPass = pass;
+        pRedisconn->mPort = port;
+        pRedisconn->mPoolSize = poolsize;
+        pRedisconn->mIndex = idx;
+        pRedisconn->mCtx = redisConnectWithTimeout(host.c_str(), port, timeoutVal);
+        if (pRedisconn->mCtx == NULL || pRedisconn->mCtx->err) {
+            if (pRedisconn->mCtx) {
+                redisFree(pRedisconn->mCtx);
             } else {
-                printf("Connect to Redis[%u]: %s:%d poolsize:%d success \n",
-                       idx, host, port, poolsize);
-                mRedisConnList[idx].push_back(pRedisconn);
+                fprintf(stderr, "Connection error: can't allocate redis context, %s  \n", pRedisconn->mCtx->errstr);
             }
+            delete pRedisconn;
+            return false;
+        } else {
+            if (!auth(pRedisconn->mCtx, pass)) {
+                delete pRedisconn;
+                return false;
+            }
+            mRedisConnList[idx].push_back(pRedisconn);
         }
-    } catch (...) {
-        printf("connect error  poolsize=%d \n", poolsize);
-        return false;
     }
+
     return true;
 }
 
@@ -397,12 +371,11 @@ RedisConnection* xRedisClusterClient::GetConnection(uint32_t idx) {
                 mRedisConnList[idx].pop_front();
                 break;
             } else {
-                printf("RedisPool::GetConnection()  error pthread_id=%d \n", getpid());
+                fprintf(stderr, "RedisPool::GetConnection()  error pthread_id=%lu \n", pthread_self());
             }
         }
         usleep(1000);
     }
-    printf("idx:%u %s:%u \n", idx, pRedisConn->mHost, pRedisConn->mPort);
     return pRedisConn;
 }
 
@@ -418,7 +391,7 @@ void xRedisClusterClient::FreeConnection(RedisConnection* pRedisConn) {
 * However if the key contains the {...} pattern, only the part between
 * { and } is hashed. This may be useful in the future to force certain
 * keys to be in the same node (assuming no resharding is in progress). */
-int32_t xRedisClusterClient::KeyHashSlot(const char* key, size_t keylen) {
+uint32_t xRedisClusterClient::KeyHashSlot(const char* key, size_t keylen) {
     size_t s, e; /* start-end indexes of { and } */
 
     for (s = 0; s < keylen; s++)
@@ -443,8 +416,7 @@ uint32_t xRedisClusterClient::FindNodeIndex(uint32_t slot) {
     for (size_t i = 0; i < vNodes.size(); ++i) {
         NodeInfo* pNode = &vNodes[i];
         if (pNode->CheckSlot(slot)) {
-            printf("FindNode %u:%lu\n", slot, i);
-            return static_cast<uint32_t>(i);
+            return i;
         }
     }
     return 0;
@@ -452,7 +424,7 @@ uint32_t xRedisClusterClient::FindNodeIndex(uint32_t slot) {
 
 uint32_t xRedisClusterClient::GetKeySlotIndex(const char* key) {
     if (NULL != key) {
-        return static_cast<uint32_t>(KeyHashSlot(key, strlen(key)));
+        return KeyHashSlot(key, strlen(key));
     }
     return 0;
 }
@@ -461,7 +433,6 @@ RedisConnection* xRedisClusterClient::FindNodeConnection(const char* key) {
     if (!mClusterEnabled) {
         return GetConnection(0);
     }
-    printf("key:%s \r\n", key);
     uint32_t slot_id = GetKeySlotIndex(key);
     uint32_t index = FindNodeIndex(slot_id);
     return GetConnection(index);
@@ -469,15 +440,14 @@ RedisConnection* xRedisClusterClient::FindNodeConnection(const char* key) {
 
 bool xRedisClusterClient::RedisCommand(RedisResult& result, const char* format, ...) {
     char* key = NULL;
-    bool bRet = false;
+    bool bRet;
     RedisConnection* pRedisConn = NULL;
 
     va_list args;
     va_start(args, format);
-    key = va_arg(args, char *);
-    printf("key:%p \n", static_cast<void*>(key));
+    key = va_arg(args, char*);
     if (0 == strlen(key)) {
-        printf("key is NULL key:%p \n", static_cast<void*>(key));
+        va_end(args);
         return false;
     }
     pRedisConn = FindNodeConnection(key);
@@ -488,11 +458,9 @@ bool xRedisClusterClient::RedisCommand(RedisResult& result, const char* format, 
 
     if (CheckReply(reply)) {
         result.Init(reply);
-
-        printf("%d %lld %d %s %lu \r\n",
-               reply->type, reply->integer, static_cast<int>(reply->len), reply->str, reply->elements);
-
         bRet = true;
+    } else {
+        bRet = false;
     }
 
     FreeConnection(pRedisConn);
@@ -507,18 +475,16 @@ bool xRedisClusterClient::RedisCommandArgv(const VSTRING& vDataIn, RedisResult& 
         return false;
     }
 
-    vector<const char*> argv(vDataIn.size());
-    vector<size_t> argvlen(vDataIn.size());
-    uint32_t j = 0;
+    std::vector<const char*> argv(vDataIn.size());
+    std::vector<size_t> argvlen(vDataIn.size());
+    unsigned int j = 0;
     for (VSTRING::const_iterator i = vDataIn.begin(); i != vDataIn.end(); ++i, ++j) {
         argv[j] = i->c_str(), argvlen[j] = i->size();
     }
 
-    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->mCtx, static_cast<int32_t>(argv.size()), &(argv[0]), &(argvlen[0])));
+    redisReply* reply = static_cast<redisReply*>(redisCommandArgv(pRedisConn->mCtx, argv.size(), &(argv[0]), &(argvlen[0])));
     if (xRedisClusterClient::CheckReply(reply)) {
         result.Init(reply);
-        printf("%d %lld %d %s %lu \r\n",
-               reply->type, reply->integer, static_cast<int>(reply->len), reply->str, reply->elements);
         bRet = true;
     } else {
         //SetErrInfo(dbi, reply);

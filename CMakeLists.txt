@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(xredis)
+PROJECT(xredis++)
 
 option(C++11_ENABLE "C++11_ENABLE" ON)
 
