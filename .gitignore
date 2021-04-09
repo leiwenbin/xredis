@@ -7,3 +7,4 @@ makefile.make
 CMakeCache.txt
 xredis.cbp
 cmake_install.cmake
+xredis++.cbp
